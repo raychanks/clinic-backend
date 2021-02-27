@@ -1,5 +1,6 @@
 import express from 'express';
 import Joi from 'joi';
+import bcrypt from 'bcrypt';
 
 import { Clinic } from '../db/models';
 
@@ -27,7 +28,11 @@ router.post('/register', async (req, res) => {
       throw new Error('clinic exists');
     }
 
-    const result = await Clinic.create(body);
+    const hashedPassword = await bcrypt.hash(body.password, 10);
+    const result = await Clinic.create({
+      ...body,
+      password: hashedPassword,
+    });
 
     res.send(result);
   } catch (err) {
