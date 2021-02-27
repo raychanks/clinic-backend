@@ -1,12 +1,9 @@
 import express from 'express';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import config from 'config';
 
 import { Clinic } from '../db/models';
-
-const tokenSecret: string = config.get('tokenSecret');
+import { TokenService } from '../services';
 
 const router = express.Router();
 
@@ -81,9 +78,7 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ id: existingClinic.id }, tokenSecret, {
-      expiresIn: '1d',
-    });
+    const token = TokenService.create(existingClinic.id);
 
     res.send({
       success: true,

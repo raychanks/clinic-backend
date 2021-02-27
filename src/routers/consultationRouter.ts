@@ -1,13 +1,10 @@
 import express from 'express';
-import config from 'config';
-import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import jwt from 'jsonwebtoken';
+import config from 'config';
 
-import { Clinic, Consultation } from '../db/models';
-
-interface JWTPayload {
-  id: string;
-}
+import { Consultation } from '../db/models';
+import { JWTPayload } from '../types';
 
 const tokenSecret: string = config.get('tokenSecret');
 
