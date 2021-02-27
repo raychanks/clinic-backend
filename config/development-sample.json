@@ -6,5 +6,6 @@
     "host": "localhost",
     "dialect": "postgres",
     "logging": false
-  }
+  },
+  "tokenSecret": "secret"
 }
