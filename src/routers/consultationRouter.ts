@@ -2,6 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 
 import { Consultation } from '../db/models';
+import { schemaValidator } from '../middlewares';
 
 const schemaCreateConsultation = Joi.object({
   doctorName: Joi.string().required(),
@@ -15,7 +16,7 @@ const schemaCreateConsultation = Joi.object({
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const consultations = await Consultation.findAll({
       where: { clinicId: req.authenticatedUser?.id },
@@ -23,18 +24,13 @@ router.get('/', async (req, res) => {
 
     // TODO: pagination
 
-    res.send({
-      data: consultations,
-    });
+    res.send({ data: consultations });
   } catch (err) {
-    res.status(401).send({
-      success: false,
-      message: 'unauthorized',
-    });
+    next(err);
   }
 });
 
-router.get('/:consultationId', async (req, res) => {
+router.get('/:consultationId', async (req, res, next) => {
   try {
     const { consultationId } = req.params;
     const consultation = await Consultation.findOne({
@@ -44,41 +40,30 @@ router.get('/:consultationId', async (req, res) => {
       },
     });
 
-    res.send({
-      data: consultation,
-    });
+    res.send({ data: consultation });
   } catch (err) {
-    res.status(401).send({
-      success: false,
-      // message: 'unauthorized',
-      message: err.message,
-    });
+    next(err);
   }
 });
 
-router.post('/', async (req, res) => {
-  try {
-    // TODO: handle status 400, will return 401 currently
-    const body = await schemaCreateConsultation.validateAsync(req.body, {
-      abortEarly: false,
-    });
+router.post(
+  '/',
+  schemaValidator(schemaCreateConsultation),
+  async (req, res, next) => {
+    try {
+      const result = await Consultation.create({
+        ...req.body,
+        clinicId: req.authenticatedUser?.id,
+      });
 
-    const result = await Consultation.create({
-      ...body,
-      clinicId: req.authenticatedUser?.id,
-    });
-
-    res.status(201).send({
-      success: true,
-      data: result,
-    });
-  } catch (err) {
-    res.status(401).send({
-      success: false,
-      // message: 'unauthorized',
-      message: err.message,
-    });
-  }
-});
+      res.status(201).send({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;
