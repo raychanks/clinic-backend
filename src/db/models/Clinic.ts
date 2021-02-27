@@ -9,6 +9,8 @@ class Clinic extends Model {
   public name!: string;
   public phoneNumber!: string;
   public address!: string;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Clinic.init(

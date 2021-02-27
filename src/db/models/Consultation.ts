@@ -2,7 +2,17 @@ import { Model, DataTypes } from 'sequelize';
 
 import sequelize from '../sequelize';
 
-class Consultation extends Model {}
+class Consultation extends Model {
+  public doctorName!: string;
+  public patientName!: string;
+  public diagnosis!: string;
+  public medication!: string;
+  public consultationFee!: number;
+  public consultedAt!: Date;
+  public nextConsultationAt!: Date | null;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
 
 Consultation.init(
   {

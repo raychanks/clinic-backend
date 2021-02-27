@@ -38,19 +38,15 @@ router.get('/', async (req, res) => {
     // verify token
     const token = authorization.replace(/^Bearer /, '');
     const { id: clinicId } = jwt.verify(token, tokenSecret) as JWTPayload;
-    const clinic = await Clinic.findByPk(clinicId);
+    const consultations = await Consultation.findAll({
+      where: { clinicId },
+    });
 
-    if (!clinic) {
-      res.status(404).send({
-        success: false,
-        message: 'clinic_not_found',
-      });
-      return;
-    }
+    // TODO: pagination
 
-    // TODO: get related consultations
-
-    res.send(clinic.id);
+    res.send({
+      data: consultations,
+    });
   } catch (err) {
     res.status(401).send({
       success: false,
@@ -59,10 +55,40 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
+router.get('/:consultationId', async (req, res) => {
+  const { consultationId } = req.params;
 
-  res.send(`GET /consultations/${id}`);
+  try {
+    const { authorization } = req.headers;
+
+    if (!authorization) {
+      res.status(401).send({
+        success: false,
+        message: 'unauthorized',
+      });
+      return;
+    }
+
+    // verify token
+    const token = authorization.replace(/^Bearer /, '');
+    const { id: clinicId } = jwt.verify(token, tokenSecret) as JWTPayload;
+    const consultation = await Consultation.findOne({
+      where: {
+        id: consultationId,
+        clinicId,
+      },
+    });
+
+    res.send({
+      data: consultation,
+    });
+  } catch (err) {
+    res.status(401).send({
+      success: false,
+      // message: 'unauthorized',
+      message: err.message,
+    });
+  }
 });
 
 router.post('/', async (req, res) => {
@@ -93,7 +119,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).send({
       success: true,
-      result,
+      data: result,
     });
   } catch (err) {
     res.status(401).send({
