@@ -1,10 +1,11 @@
 import bodyParser from 'body-parser';
-import express, { ErrorRequestHandler } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 
 import { clinicRouter, consultationRouter } from './routers';
 import { tokenAuthentication } from './middlewares';
+import { errorHandler } from './errors';
 
 const app = express();
 
@@ -15,10 +16,6 @@ app.use(helmet());
 
 app.use('/', clinicRouter);
 app.use('/consultations', tokenAuthentication, consultationRouter);
-
-const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  res.status(400).send(err.message);
-};
 
 app.use(errorHandler);
 

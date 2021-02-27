@@ -4,6 +4,12 @@ import bcrypt from 'bcrypt';
 
 import { Clinic } from '../db/models';
 import { TokenService } from '../services';
+import { schemaValidator } from '../middlewares';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  UniquessException,
+} from '../errors';
 
 const router = express.Router();
 
@@ -20,75 +26,60 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
-router.post('/register', async (req, res) => {
-  try {
-    const body = await registerSchema.validateAsync(req.body, {
-      abortEarly: false,
-    });
-    const existingClinic = await Clinic.findOne({
-      where: { email: body.email },
-    });
+router.post(
+  '/register',
+  schemaValidator(registerSchema),
+  async (req, res, next) => {
+    try {
+      const existingClinic = await Clinic.findOne({
+        where: { email: req.body.email },
+      });
 
-    if (existingClinic) {
-      throw new Error('clinic_exists');
+      if (existingClinic) {
+        next(new UniquessException('clinic_exists'));
+        return;
+      }
+
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+      await Clinic.create({
+        ...req.body,
+        password: hashedPassword,
+      });
+      res.send({ success: true });
+    } catch (err) {
+      next(err);
     }
+  },
+);
 
-    const hashedPassword = await bcrypt.hash(body.password, 10);
-
-    await Clinic.create({
-      ...body,
-      password: hashedPassword,
-    });
-    res.send({ success: true });
-  } catch (err) {
-    res.status(400).send({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-router.post('/login', async (req, res) => {
+router.post('/login', schemaValidator(loginSchema), async (req, res, next) => {
   try {
-    const body = await loginSchema.validateAsync(req.body, {
-      abortEarly: false,
-    });
     const existingClinic = await Clinic.findOne({
-      where: { email: body.email },
+      where: { email: req.body.email },
     });
 
     if (!existingClinic) {
-      res.status(404).send({
-        success: false,
-        message: 'clinic_not_found',
-      });
+      next(new NotFoundException('clinic_not_found'));
       return;
     }
 
     const isPasswordValid = await bcrypt.compare(
-      body.password,
+      req.body.password,
       existingClinic.password,
     );
 
     if (!isPasswordValid) {
-      res.status(401).send({
-        success: false,
-        message: 'invalid_credentials',
-      });
+      next(new UnauthorizedException('invalid_credentials'));
       return;
     }
 
-    const token = TokenService.create(existingClinic.id);
-
     res.send({
       success: true,
-      token,
+      token: TokenService.create(existingClinic.id),
     });
   } catch (err) {
-    res.status(400).send({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 });
 

@@ -1,12 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 
 import { TokenService } from '../services';
 
-function tokenAuthentication(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+const tokenAuthentication: RequestHandler = (req, res, next) => {
   try {
     const { authorization } = req.headers;
 
@@ -23,6 +19,6 @@ function tokenAuthentication(
   } catch (err) {
     next(err);
   }
-}
+};
 
 export default tokenAuthentication;
