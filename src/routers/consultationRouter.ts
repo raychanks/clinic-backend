@@ -1,20 +1,30 @@
 import express from 'express';
+import config from 'config';
 
 import { Consultation } from '../db/models';
-import { schemaValidator } from '../middlewares';
+import { pagination, schemaValidator } from '../middlewares';
 import { ConsultationSchema } from '../schemas';
+import { Pagination } from '../types';
 
+const PAGE_SIZE: number = config.get('resources.consultation.pageSize');
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/', pagination(PAGE_SIZE), async (req, res, next) => {
   try {
-    const consultations = await Consultation.findAll({
+    const { page, pageSize } = req.pagination as Pagination;
+    const { rows: consultations, count } = await Consultation.findAndCountAll({
       where: { clinicId: req.authenticatedUser?.id },
+      limit: pageSize,
+      offset: pageSize * (page - 1),
     });
+    const totalPages = Math.ceil(count / pageSize);
 
-    // TODO: pagination
-
-    res.send({ data: consultations });
+    res.send({
+      data: consultations,
+      totalPages,
+      pageSize,
+      page,
+    });
   } catch (err) {
     next(err);
   }

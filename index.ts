@@ -1,5 +1,9 @@
+import config from 'config';
+
 import app from './src/app';
 import connectDatabase from './src/db/connect';
+
+const port: string = config.get('port');
 
 main();
 
@@ -7,8 +11,8 @@ async function main() {
   try {
     await connectDatabase();
 
-    app.listen('3001', () => {
-      console.log('server started on port 3001');
+    app.listen(port, () => {
+      console.log(`server started on port ${port}`);
     });
   } catch (err) {
     console.log(err);
