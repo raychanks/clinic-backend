@@ -1,18 +1,8 @@
 import express from 'express';
-import Joi from 'joi';
 
 import { Consultation } from '../db/models';
 import { schemaValidator } from '../middlewares';
-
-const schemaCreateConsultation = Joi.object({
-  doctorName: Joi.string().required(),
-  patientName: Joi.string().required(),
-  diagnosis: Joi.string().required(),
-  medication: Joi.string().required(),
-  consultationFee: Joi.number().required(),
-  consultedAt: Joi.date().required(),
-  nextConsultationAt: Joi.date(),
-});
+import { ConsultationSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -48,7 +38,7 @@ router.get('/:consultationId', async (req, res, next) => {
 
 router.post(
   '/',
-  schemaValidator(schemaCreateConsultation),
+  schemaValidator(ConsultationSchema.schemaCreateConsultation),
   async (req, res, next) => {
     try {
       const result = await Consultation.create({

@@ -1,5 +1,4 @@
 import express from 'express';
-import Joi from 'joi';
 import bcrypt from 'bcrypt';
 
 import { Clinic } from '../db/models';
@@ -10,25 +9,13 @@ import {
   UnauthorizedException,
   UniquessException,
 } from '../errors';
+import { ClinicSchema } from '../schemas';
 
 const router = express.Router();
 
-const registerSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().required(),
-  name: Joi.string().required(),
-  phoneNumber: Joi.string().required(),
-  address: Joi.string().required(),
-});
-
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().required(),
-});
-
 router.post(
   '/register',
-  schemaValidator(registerSchema),
+  schemaValidator(ClinicSchema.schemaRegister),
   async (req, res, next) => {
     try {
       const existingClinic = await Clinic.findOne({
@@ -53,34 +40,38 @@ router.post(
   },
 );
 
-router.post('/login', schemaValidator(loginSchema), async (req, res, next) => {
-  try {
-    const existingClinic = await Clinic.findOne({
-      where: { email: req.body.email },
-    });
+router.post(
+  '/login',
+  schemaValidator(ClinicSchema.schemaLogin),
+  async (req, res, next) => {
+    try {
+      const existingClinic = await Clinic.findOne({
+        where: { email: req.body.email },
+      });
 
-    if (!existingClinic) {
-      next(new NotFoundException('clinic_not_found'));
-      return;
+      if (!existingClinic) {
+        next(new NotFoundException('clinic_not_found'));
+        return;
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        req.body.password,
+        existingClinic.password,
+      );
+
+      if (!isPasswordValid) {
+        next(new UnauthorizedException('invalid_credentials'));
+        return;
+      }
+
+      res.send({
+        success: true,
+        token: TokenService.create(existingClinic.id),
+      });
+    } catch (err) {
+      next(err);
     }
-
-    const isPasswordValid = await bcrypt.compare(
-      req.body.password,
-      existingClinic.password,
-    );
-
-    if (!isPasswordValid) {
-      next(new UnauthorizedException('invalid_credentials'));
-      return;
-    }
-
-    res.send({
-      success: true,
-      token: TokenService.create(existingClinic.id),
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 export default router;
