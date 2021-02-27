@@ -1,8 +1,10 @@
-import { Sequelize, Options } from 'sequelize';
-import config from 'config';
+import { Sequelize } from 'sequelize/types';
 
-const databaseConfig = config.get('database') as Options;
+import './associations';
+import sequelize from './sequelize';
 
-const sequelize = new Sequelize(databaseConfig);
+async function connectDatabase(): Promise<Sequelize> {
+  return sequelize.sync();
+}
 
-export default sequelize;
+export default connectDatabase;
