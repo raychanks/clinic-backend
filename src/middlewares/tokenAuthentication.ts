@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 
 import { TokenService } from '../services';
 
-function authenticateUser(
+function tokenAuthentication(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -25,4 +25,4 @@ function authenticateUser(
   }
 }
 
-export default authenticateUser;
+export default tokenAuthentication;

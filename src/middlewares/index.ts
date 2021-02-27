@@ -1,3 +1,3 @@
-import authenticateUser from './authenticateUser';
+import tokenAuthentication from './tokenAuthentication';
 
-export { authenticateUser };
+export { tokenAuthentication };

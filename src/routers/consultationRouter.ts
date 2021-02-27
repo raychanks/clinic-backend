@@ -1,12 +1,7 @@
 import express from 'express';
 import Joi from 'joi';
-import jwt from 'jsonwebtoken';
-import config from 'config';
 
 import { Consultation } from '../db/models';
-import { JWTPayload } from '../types';
-
-const tokenSecret: string = config.get('tokenSecret');
 
 const schemaCreateConsultation = Joi.object({
   doctorName: Joi.string().required(),
@@ -22,21 +17,8 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { authorization } = req.headers;
-
-    if (!authorization) {
-      res.status(401).send({
-        success: false,
-        message: 'unauthorized',
-      });
-      return;
-    }
-
-    // verify token
-    const token = authorization.replace(/^Bearer /, '');
-    const { id: clinicId } = jwt.verify(token, tokenSecret) as JWTPayload;
     const consultations = await Consultation.findAll({
-      where: { clinicId },
+      where: { clinicId: req.authenticatedUser?.id },
     });
 
     // TODO: pagination
@@ -53,26 +35,12 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:consultationId', async (req, res) => {
-  const { consultationId } = req.params;
-
   try {
-    const { authorization } = req.headers;
-
-    if (!authorization) {
-      res.status(401).send({
-        success: false,
-        message: 'unauthorized',
-      });
-      return;
-    }
-
-    // verify token
-    const token = authorization.replace(/^Bearer /, '');
-    const { id: clinicId } = jwt.verify(token, tokenSecret) as JWTPayload;
+    const { consultationId } = req.params;
     const consultation = await Consultation.findOne({
       where: {
         id: consultationId,
-        clinicId,
+        clinicId: req.authenticatedUser?.id,
       },
     });
 
@@ -90,20 +58,6 @@ router.get('/:consultationId', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { authorization } = req.headers;
-
-    if (!authorization) {
-      res.status(401).send({
-        success: false,
-        message: 'unauthorized',
-      });
-      return;
-    }
-
-    // verify token
-    const token = authorization.replace(/^Bearer /, '');
-    const { id: clinicId } = jwt.verify(token, tokenSecret) as JWTPayload;
-
     // TODO: handle status 400, will return 401 currently
     const body = await schemaCreateConsultation.validateAsync(req.body, {
       abortEarly: false,
@@ -111,7 +65,7 @@ router.post('/', async (req, res) => {
 
     const result = await Consultation.create({
       ...body,
-      clinicId,
+      clinicId: req.authenticatedUser?.id,
     });
 
     res.status(201).send({
