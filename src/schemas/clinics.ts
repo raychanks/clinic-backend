@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const schemaRegister = Joi.object({
+export const register = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
   name: Joi.string().required(),
@@ -8,7 +8,7 @@ export const schemaRegister = Joi.object({
   address: Joi.string().required(),
 });
 
-export const schemaLogin = Joi.object({
+export const login = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
 });

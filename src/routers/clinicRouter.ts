@@ -7,7 +7,7 @@ import { schemaValidator } from '../middlewares';
 import {
   NotFoundException,
   UnauthorizedException,
-  UniquessException,
+  UniquenessException,
 } from '../errors';
 import { ClinicSchema } from '../schemas';
 
@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.post(
   '/register',
-  schemaValidator(ClinicSchema.schemaRegister),
+  schemaValidator(ClinicSchema.register),
   async (req, res, next) => {
     try {
       const existingClinic = await Clinic.findOne({
@@ -23,7 +23,7 @@ router.post(
       });
 
       if (existingClinic) {
-        next(new UniquessException('clinic_exists'));
+        next(new UniquenessException('clinic_exists'));
         return;
       }
 
@@ -42,7 +42,7 @@ router.post(
 
 router.post(
   '/login',
-  schemaValidator(ClinicSchema.schemaLogin),
+  schemaValidator(ClinicSchema.login),
   async (req, res, next) => {
     try {
       const existingClinic = await Clinic.findOne({
