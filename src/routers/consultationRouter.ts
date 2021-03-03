@@ -1,5 +1,6 @@
 import express from 'express';
 import config from 'config';
+import { Op } from 'sequelize';
 
 import { Consultation } from '../db/models';
 import { pagination, schemaValidator } from '../middlewares';
@@ -12,10 +13,18 @@ const router = express.Router();
 router.get('/', pagination(PAGE_SIZE), async (req, res, next) => {
   try {
     const { page, pageSize } = req.pagination as Pagination;
+    const { from, to } = req.query as { from: string; to: string };
     const { rows: consultations, count } = await Consultation.findAndCountAll({
-      where: { clinicId: req.authenticatedUser?.id },
+      where: {
+        clinicId: req.authenticatedUser?.id,
+        consultedAt: {
+          [Op.gte]: from,
+          [Op.lt]: to,
+        },
+      },
       limit: pageSize,
       offset: pageSize * (page - 1),
+      order: [['consultedAt', 'DESC']],
     });
     const totalPages = Math.ceil(count / pageSize);
 

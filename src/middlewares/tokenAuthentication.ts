@@ -15,7 +15,7 @@ const tokenAuthentication: RequestHandler = (req, res, next) => {
     req.authenticatedUser = TokenService.verify(authorization);
     next();
   } catch (err) {
-    next(err);
+    next(new UnauthorizedException('invalid_token'));
   }
 };
 

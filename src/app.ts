@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 
-import { clinicRouter, consultationRouter } from './routers';
+import { authRouter, clinicRouter, consultationRouter } from './routers';
 import { tokenAuthentication } from './middlewares';
 import { errorHandler } from './errors';
 
@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(helmet());
 
 app.use('/', clinicRouter);
+app.use('/auth', authRouter);
 app.use('/consultations', tokenAuthentication, consultationRouter);
 
 app.use(errorHandler);
